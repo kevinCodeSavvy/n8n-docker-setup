@@ -1,0 +1,38 @@
+volumes:
+  n8n_storage:
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    env_file:
+      - ".env"
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./local_files:/files
+    network_mode: service:n8n-on-hstgr
+
+  n8n-on-hstgr:
+    image: tailscale/tailscale:latest
+    hostname: n8n-on-hstgr
+    ports:
+      - 5678:5678
+    environment:
+      - TS_EXTRA_ARGS=--auth-key file:/run/secrets/tsauthkey
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/tailscale-n8n/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+    secrets:
+      - tsauthkey
+
+secrets:
+  tsauthkey:
+    file: ~/.config/tsauthkey
+
+    

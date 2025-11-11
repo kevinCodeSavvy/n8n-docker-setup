@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    volumes:
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 134217728 # 128*2^20 bytes = 128Mb
+      - ./postgres-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    network_mode: service:pg-on-hstgr
+
+  pg-on-hstgr:
+    image: tailscale/tailscale:latest
+    hostname: pg-on-hstgr
+    environment:
+      - TS_EXTRA_ARGS=--auth-key file:/run/secrets/tsauthkey
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/tailscale-n8n/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+    secrets:
+      - tsauthkey
+
+secrets:
+  tsauthkey:
+    file: ~/.config/tsauthkey
+

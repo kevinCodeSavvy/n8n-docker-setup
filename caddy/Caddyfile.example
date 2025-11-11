@@ -1,0 +1,37 @@
+{
+    ocsp_stapling off
+}
+
+n.mydomain.com {
+	reverse_proxy n8n-on-hstgr:5678
+}
+
+s.mydomain.com {
+    reverse_proxy searxng-on-hstgr:8080
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}
+
+kk.mydomain.com {
+    reverse_proxy karakeep-on-hstgr:3000
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}
+
+pages.mydomain.com {
+  tls {
+    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+  header {
+    Access-Control-Allow-Origin *
+    Access-Control-Allow-Credentials true
+    Access-Control-Allow-Methods *
+    Access-Control-Allow-Headers *
+    defer
+  }
+
+  root * /webpages
+  file_server browse
+}

@@ -1,0 +1,18 @@
+services:
+  caddy:
+    build: .
+    container_name: caddy
+    hostname: caddy
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ~/homelab/webpages:/webpages
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data:/data
+      - ./config:/config
+      - /var/run/docker.sock:/var/run/docker.sock

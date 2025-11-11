@@ -1,0 +1,42 @@
+services:
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    network_mode: service:searxng-on-hstgr
+    volumes:
+      - ./config:/etc/searxng:ro
+    env_file:
+      - .env
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - CHOWN
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+  
+  searxng-on-hstgr:
+    image: tailscale/tailscale:latest
+    hostname: searxng-on-hstgr
+    environment:
+      - TS_EXTRA_ARGS=--auth-key file:/run/secrets/tsauthkey
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ${PWD}/tailscale-state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+    secrets:
+      - tsauthkey
+
+secrets:
+  tsauthkey:
+    file: ~/.config/tsauthkey
+

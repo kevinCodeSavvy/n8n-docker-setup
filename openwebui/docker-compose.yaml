@@ -1,0 +1,34 @@
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
+    env_file:
+      - .env
+    restart: unless-stopped
+    network_mode: service:openwebui-on-hstgr
+
+  openwebui-on-hstgr:
+      image: tailscale/tailscale:latest
+      hostname: openwebui-on-hstgr
+      environment:
+        - TS_EXTRA_ARGS=--auth-key file:/run/secrets/tsauthkey
+        - TS_STATE_DIR=/var/lib/tailscale
+        - TS_USERSPACE=false
+      volumes:
+        - ${PWD}/tailscale-state:/var/lib/tailscale
+      devices:
+        - /dev/net/tun:/dev/net/tun
+      cap_add:
+        - net_admin
+      restart: unless-stopped
+      secrets:
+        - tsauthkey
+
+secrets:
+  tsauthkey:
+    file: ~/.config/tsauthkey
+
+volumes:
+  open-webui:
